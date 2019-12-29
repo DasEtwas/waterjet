@@ -1,0 +1,18 @@
+[package]
+name = "waterjet"
+version = "0.1.0"
+authors = ["DasEtwas <18222134+DasEtwas@users.noreply.github.com>"]
+edition = "2018"
+exclude = ["examples/*"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+waterjet_glue = { path = "waterjet-glue" }
+case = "1.0.0"
+joinery = "2.0.0"
+jni = "0.14.0"
+waterjet_macros = { path = "waterjet_macros" }
+
+[workspace]
+members = ["waterjet-glue", "waterjet_macros", "examples/printhello"]
