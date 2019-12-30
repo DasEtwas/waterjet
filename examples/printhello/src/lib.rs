@@ -1,1 +1,1 @@
-waterjet::hook!(Nice);
+waterjet::hook!(PrintHello);

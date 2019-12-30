@@ -17,7 +17,7 @@ pub fn hook(item: TokenStream) -> TokenStream {
 use ::waterjet::jni_hook_prelude::*;
         
 #[no_mangle]
-pub extern "system" fn Java_waterjet_com_github_{main_class} (
+pub extern "system" fn Java_waterjet_com_github_{main_class}_rust_onEnable (
     env: JNIEnv,
     class: JClass,
     plugin: JObject,

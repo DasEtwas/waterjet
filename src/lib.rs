@@ -1,5 +1,5 @@
 pub mod build;
-pub mod hook;
+pub mod javagen;
 pub use waterjet_macros::hook;
 
 pub mod jni_hook_prelude {

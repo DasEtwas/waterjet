@@ -8,11 +8,11 @@ exclude = ["examples/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-waterjet_glue = { path = "waterjet-glue" }
 case = "1.0.0"
 joinery = "2.0.0"
 jni = "0.14.0"
 waterjet_macros = { path = "waterjet_macros" }
+toml = "0.5.5"
 
 [workspace]
-members = ["waterjet-glue", "waterjet_macros", "examples/printhello"]
+members = ["waterjet_macros", "examples/printhello"]
