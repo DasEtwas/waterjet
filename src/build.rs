@@ -7,23 +7,35 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+// needs to be manually synced with waterjet_macros::PACKAGE_PREFIX
 pub const PACKAGE_PREFIX: &str = "io.github.waterjet";
+
 #[cfg(windows)]
 pub const LIB_FILE_SUFFIX: &str = "dll";
+#[cfg(windows)]
+pub const LIB_FILE_PREFIX: &str = "";
 #[cfg(unix)]
 pub const LIB_FILE_SUFFIX: &str = "so";
+#[cfg(unix)]
+pub const LIB_FILE_PREFIX: &str = "lib";
 
 /// Should be called by the plugin crate's build script
 pub fn build() {
     let (plugin_name, plugin_yaml) = make_plugin_yaml().expect("failed to read Cargo.toml");
 
     let main_class_content = main_class(
-        format!("lib/{}.{}", plugin_name, LIB_FILE_SUFFIX).as_str(),
+        format!(
+            "{}{}.{}",
+            LIB_FILE_PREFIX,
+            std::env::var("CARGO_PKG_NAME").expect("CARGO_PKG_NAME not set"),
+            LIB_FILE_SUFFIX
+        )
+        .as_str(),
         plugin_name.as_str(),
-        format!("{}.{}", PACKAGE_PREFIX, plugin_name).as_str(),
+        PACKAGE_PREFIX,
     );
 
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not defined"));
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
 
     let package_dirs = {
         let mut path = out_dir.to_owned();
@@ -68,7 +80,7 @@ pub fn build() {
                 "-cp",
                 format!(
                     "{}/jars/spigot.jar",
-                    std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not defined")
+                    std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set")
                 )
                 .as_str(),
                 main_source_path
@@ -78,7 +90,11 @@ pub fn build() {
             .status()
             .expect("failed to run javac command");
 
-        println!("javac exited with {}", javac_out);
+        if javac_out.code().is_some() && javac_out.code().unwrap() != 0 {
+            panic!("javac exited with {}", javac_out);
+        } else {
+            println!("javac exited with {}", javac_out);
+        }
     }
 
     let class_files = find_files_recursively(out_dir.join("compiled"), ".class")
@@ -103,7 +119,11 @@ pub fn build() {
             .status()
             .expect("failed to run javac command");
 
-        println!("jar exited with {}", jar_out);
+        if jar_out.code().is_some() && jar_out.code().unwrap() != 0 {
+            panic!("jar exited with {}", jar_out);
+        } else {
+            println!("jar exited with {}", jar_out);
+        }
     }
 
     {
@@ -113,7 +133,11 @@ pub fn build() {
             .status()
             .expect("failed to run zip command");
 
-        println!("zip exited with {}", zip_out);
+        if zip_out.code().is_some() && zip_out.code().unwrap() != 0 {
+            panic!("zip exited with {}", zip_out);
+        } else {
+            println!("zip exited with {}", zip_out);
+        }
     }
 
     {
@@ -123,7 +147,11 @@ pub fn build() {
             .status()
             .expect("failed to run zip command");
 
-        println!("zip exited with {}", zip_out);
+        if zip_out.code().is_some() && zip_out.code().unwrap() != 0 {
+            panic!("zip exited with {}", zip_out);
+        } else {
+            println!("zip exited with {}", zip_out);
+        }
     }
 
     let jar_dest = out_dir
@@ -134,8 +162,8 @@ pub fn build() {
         .parent()
         .unwrap()
         .join(format!("{}.jar", plugin_name));
-    println!("copying plugin jar to {}", jar_dest.to_str().unwrap());
 
+    println!("copying plugin jar to {}", jar_dest.to_str().unwrap());
     std::fs::copy(out_dir.join("plugin.jar"), jar_dest)
         .expect("failed to copy plugin jar to target folder");
 }
@@ -144,8 +172,8 @@ fn find_files_recursively<P: AsRef<Path>>(
     path: P,
     file_name_end: &str,
 ) -> std::io::Result<Vec<PathBuf>> {
-    let mut classes = vec![];
-    fn search_for_class(entry: DirEntry, classes: &mut Vec<PathBuf>, file_name_end: &str) {
+    let mut matches = vec![];
+    fn search_for_class(entry: DirEntry, matches: &mut Vec<PathBuf>, file_name_end: &str) {
         if let Ok(metadata) = entry.metadata() {
             if metadata.is_file() {
                 let file_name = entry
@@ -155,7 +183,7 @@ fn find_files_recursively<P: AsRef<Path>>(
                     .to_owned();
 
                 if file_name.ends_with(file_name_end) {
-                    classes.push(entry.path());
+                    matches.push(entry.path());
                 }
             }
 
@@ -163,7 +191,7 @@ fn find_files_recursively<P: AsRef<Path>>(
                 if let Ok(read_dir) = read_dir(entry.path()) {
                     for entry in read_dir {
                         if let Ok(entry) = entry {
-                            search_for_class(entry, classes, file_name_end);
+                            search_for_class(entry, matches, file_name_end);
                         }
                     }
                 }
@@ -173,17 +201,17 @@ fn find_files_recursively<P: AsRef<Path>>(
 
     for entry in read_dir(path)? {
         if let Ok(entry) = entry {
-            search_for_class(entry, &mut classes, file_name_end);
+            search_for_class(entry, &mut matches, file_name_end);
         }
     }
 
-    Ok(classes)
+    Ok(matches)
 }
 
 /// returns the plugin's main class name given by package.metadata.waterjet.name in Cargo.toml, and the rendered plugin.yml
 pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
     // https://www.spigotmc.org/wiki/plugin-yml/
-    let mut plugin_parameters = HashMap::new();
+    let mut plugin_attributes = HashMap::new();
 
     const ENV_VAR_PARAMETERS: &[(&str, &str)] = &[
         ("CARGO_PKG_AUTHORS", "authors"),
@@ -195,7 +223,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
 
     for (env_var, param_name) in ENV_VAR_PARAMETERS {
         if let Ok(param) = std::env::var(env_var) {
-            plugin_parameters.insert(
+            plugin_attributes.insert(
                 (*param_name).to_owned(),
                 StringOrList::String(match *param_name {
                     "name" => param.to_camel(),
@@ -205,12 +233,17 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         }
     }
 
-    parse_plugin_attributes(&mut plugin_parameters)?;
+    plugin_attributes.insert(
+        "api-version".to_owned(),
+        StringOrList::String("1.13".to_owned()),
+    );
+
+    parse_plugin_attributes(&mut plugin_attributes)?;
 
     let mut plugin_yml = String::new();
 
     // required fields
-    let name = plugin_parameters
+    let name = plugin_attributes
         .get("name")
         .and_then(StringOrList::as_string) // remove newlines
         .map(|s| s.lines().join_with(" ").to_string())
@@ -220,7 +253,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
     let main = format!("{}.{}\n", PACKAGE_PREFIX, name);
     plugin_yml.push_str(format!("main: {}", main).as_str());
 
-    let version = plugin_parameters
+    let version = plugin_attributes
         .get("version")
         .and_then(StringOrList::as_string)
         .map(|s| s.lines().join_with(" ").to_string())
@@ -228,7 +261,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
     plugin_yml.push_str(format!("version: {}\n", version).as_str());
 
     // optional automatic fields
-    if let Some(authors) = plugin_parameters
+    if let Some(authors) = plugin_attributes
         .get("authors")
         .cloned()
         .map(StringOrList::into_list)
@@ -238,7 +271,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("authors: {}\n", authors).as_str());
     }
 
-    if let Some(description) = plugin_parameters
+    if let Some(description) = plugin_attributes
         .get("description")
         .and_then(StringOrList::as_string)
     {
@@ -254,7 +287,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         );
     }
 
-    if let Some(website) = plugin_parameters
+    if let Some(website) = plugin_attributes
         .get("website")
         .and_then(StringOrList::as_string)
         // remove newlines
@@ -263,7 +296,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("website: {}\n", website).as_str());
     }
 
-    if let Some(api_version) = plugin_parameters
+    if let Some(api_version) = plugin_attributes
         .get("api-version")
         .and_then(StringOrList::as_string)
         // remove newlines
@@ -272,7 +305,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("api-version: {}\n", api_version).as_str());
     }
 
-    if let Some(prefix) = plugin_parameters
+    if let Some(prefix) = plugin_attributes
         .get("prefix")
         .and_then(StringOrList::as_string)
         // remove newlines
@@ -281,7 +314,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("prefix: {}\n", prefix).as_str());
     }
 
-    if let Some(loadbefore) = plugin_parameters
+    if let Some(loadbefore) = plugin_attributes
         .get("loadbefore")
         .cloned()
         .map(StringOrList::into_list)
@@ -293,7 +326,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("loadbefore: {}\n", loadbefore).as_str());
     }
 
-    if let Some(depend) = plugin_parameters
+    if let Some(depend) = plugin_attributes
         .get("depend")
         .cloned()
         .map(StringOrList::into_list)
@@ -305,7 +338,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("depend: {}\n", depend).as_str());
     }
 
-    if let Some(softdepend) = plugin_parameters
+    if let Some(softdepend) = plugin_attributes
         .get("softdepend")
         .cloned()
         .map(StringOrList::into_list)
@@ -317,7 +350,7 @@ pub fn make_plugin_yaml() -> Result<(String, String), std::io::Error> {
         plugin_yml.push_str(format!("softdepend: {}\n", softdepend).as_str());
     }
 
-    if let Some(extra) = plugin_parameters
+    if let Some(extra) = plugin_attributes
         .get("extra")
         .and_then(StringOrList::as_string)
     {

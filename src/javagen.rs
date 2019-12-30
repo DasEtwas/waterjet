@@ -8,11 +8,12 @@ public class ${NAME} extends JavaPlugin {
 
 	static {
 		try {
-			System.loadLibrary("${LIBNAME}");
+			System.load(new java.io.File(".").getCanonicalPath() + java.io.File.separator + "plugins" + java.io.File.separator + "lib" + java.io.File.separator + "${LIBNAME}");
 			loadedLibs = true;
 		} catch (UnsatisfiedLinkError e) {
-            System.out.println("ERROR: Failed to load waterjet Plugin library file ./${LIBNAME}");
-            System.err.println("ERROR: Failed to load waterjet Plugin library file ./${LIBNAME}");
+            System.err.println("ERROR: Failed to load waterjet plugin library file ${LIBNAME}: " + e);
+		} catch (java.io.IOException e) {
+		    System.err.println("Failed to canonicalize path for plugin library file: " + e);
 		}
 	}
 
@@ -25,21 +26,14 @@ public class ${NAME} extends JavaPlugin {
 	@Override
 	public void onEnable() {
 	    if (loadedLibs) {
-	        JavaPlugin plugin = (JavaPlugin) this;
-	        
-		    this.rust_thread = new Thread(new Runnable() {
-                public void run() {
-                    ${NAME}_rust_onEnable(plugin);
-                }
-            });
-            this.rust_thread.start();
+            ${NAME}_rust_onEnable((JavaPlugin) this);
         }
 	}
 
 	@Override
 	public void onDisable() {
 	    if (loadedLibs) {
-		    ${NAME}_rust_onDisable(this);
+		    ${NAME}_rust_onDisable((JavaPlugin) this);
 		}
 	}
 }

@@ -1,5 +1,9 @@
 extern crate proc_macro;
+use joinery::prelude::*;
 use proc_macro::{TokenStream, TokenTree};
+
+// needs to be manually synced with waterjet::build::PACKAGE_PREFIX
+const PACKAGE_PREFIX: &str = "io.github.waterjet";
 
 #[proc_macro]
 pub fn hook(item: TokenStream) -> TokenStream {
@@ -17,12 +21,23 @@ pub fn hook(item: TokenStream) -> TokenStream {
 use ::waterjet::jni_hook_prelude::*;
         
 #[no_mangle]
-pub extern "system" fn Java_waterjet_com_github_{main_class}_rust_onEnable (
+pub extern "system" fn Java_{package}_{main_class}_{main_class}_1rust_1onEnable (
     env: JNIEnv,
     class: JClass,
     plugin: JObject,
 ) {{
+    println!("this is rust saying hello men");
+}}
+
+#[no_mangle]
+pub extern "system" fn Java_{package}_{main_class}_{main_class}_1rust_1onDisable (
+    env: JNIEnv,
+    class: JClass,
+    plugin: JObject,
+) {{
+    println!("this is rust saying bye men");
 }}"#,
+        package = PACKAGE_PREFIX.split(".").join_with("_").to_string(),
         main_class = main_class
     )
     .parse()
