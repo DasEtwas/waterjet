@@ -11,9 +11,9 @@ pub mod jni_hook_prelude {
 /// This trait is designed to be implemented by a plugin.
 pub trait McPlugin: Default {
     /// Called when the Server calls Plugin.onEnable. Implementations of on_enable block execution of the Java method.
-    fn on_enable(&self, plugin: &GlobalRef, jni: &JNIEnv) {}
+    fn on_enable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {}
     /// Called when the Server calls Plugin.onDisable. Implementations of on_disable block execution of the Java method.
-    fn on_disable(&self, plugin: &GlobalRef, jni: &JNIEnv) {}
+    fn on_disable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {}
 }
 
 /// Represents a JNIEnv-owning Rust thread decoupled from the rest of the server.

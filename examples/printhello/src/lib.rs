@@ -13,11 +13,11 @@ impl Default for Model {
 }
 
 impl McPlugin for Model {
-    fn on_enable(&self, plugin: &GlobalRef, jni: &JNIEnv) {
+    fn on_enable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {
         println!("Hello, World!");
     }
 
-    fn on_disable(&self, plugin: &GlobalRef, jni: &JNIEnv) {
+    fn on_disable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {
         println!("Bye, World!");
     }
 }
