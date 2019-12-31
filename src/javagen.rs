@@ -59,8 +59,10 @@ public class ${NAME} extends JavaPlugin {
             System.err.println("Failed to call ${NAME} ffi: " + e);
             e.printStackTrace();
         }
-        native_ = null;
+       
 		loader = null;
+		native_ = null;
+		 
 		// try to garbage collect the class loader to unload library
 	    System.gc();
 	}
@@ -83,7 +85,6 @@ public class ${NAME} extends JavaPlugin {
        			while ((i = is.read()) != -1) {
        			    baos.write(i);
        			}
-       		
        		
        			is.close();
        			byte[] classData = baos.toByteArray();
@@ -111,8 +112,7 @@ class ${NAME}Native {
 	
     public static void loadLibs() {
         try {
-            String lib = new File(".").getCanonicalPath() + File.separator + "plugins" + File.separator + "lib" + File.separator + "${LIBNAME}";
-            System.load(lib);
+            System.load(new File(".").getCanonicalPath() + File.separator + "plugins" + File.separator + "lib" + File.separator + "${LIBNAME}");
             System.out.println("Successfully loaded plugin library \"${LIBNAME}\"");
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Failed to load waterjet plugin library file ${LIBNAME}: " + e);
