@@ -19,18 +19,42 @@ pub fn hook(item: TokenStream) -> TokenStream {
     format!(
         r#"
 use ::waterjet::jni_hook_prelude::*;
+use std::{{sync::mpsc, thread, time::Duration}};
         
 #[no_mangle]
-pub extern "system" fn Java_{package}_{main_class}_{main_class}_1rust_1onEnable (
+pub extern "system" fn Java_{package}_{main_class}Native_rust_1{main_class}_1onEnable(
     env: JNIEnv,
     class: JClass,
     plugin: JObject,
 ) {{
-    println!("this is rust saying hello men");
+    let jvm = env.get_java_vm().unwrap();
+
+    let plugin = env.new_global_ref(plugin).unwrap();
+
+    // used to block this function until thread started
+    let (tx, rx) = mpsc::channel();
+
+    let _ = thread::spawn(move || {{
+        // Use the `JavaVM` interface to attach a `JNIEnv` to the current thread.
+        let env = jvm.attach_current_thread().unwrap();
+        
+        // Signal that the thread has started.
+        tx.send(()).unwrap();
+
+        for i in 0..10 {{
+            thread::sleep(Duration::from_millis(500));
+            println!("hello men xd {{}}", i);
+        }}
+        
+        // The current thread is detached automatically when `env` goes out of scope.
+    }});
+
+    // Wait until the thread has started.
+    rx.recv().unwrap();
 }}
 
 #[no_mangle]
-pub extern "system" fn Java_{package}_{main_class}_{main_class}_1rust_1onDisable (
+pub extern "system" fn Java_{package}_{main_class}Native_rust_1{main_class}_1onDisable(
     env: JNIEnv,
     class: JClass,
     plugin: JObject,

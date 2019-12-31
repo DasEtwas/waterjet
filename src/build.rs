@@ -1,4 +1,4 @@
-use crate::javagen::main_class;
+use crate::javagen::source_files;
 use case::CaseExt;
 use joinery::JoinableIterator;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub const LIB_FILE_PREFIX: &str = "lib";
 pub fn build() {
     let (plugin_name, plugin_yaml) = make_plugin_yaml().expect("failed to read Cargo.toml");
 
-    let main_class_content = main_class(
+    let source_files = source_files(
         format!(
             "{}{}.{}",
             LIB_FILE_PREFIX,
@@ -65,28 +65,43 @@ pub fn build() {
         .create(out_dir.join("compiled"))
         .expect("failed to create folder for compiled java files");
 
-    let main_source_path = package_dirs.join(format!("{}.java", plugin_name));
-    File::create(&main_source_path)
-        .expect("failed to create source code file")
-        .write_all(main_class_content.as_bytes())
-        .expect("failed to write java source");
+    let mut source_paths = vec![];
+    for (name, content) in source_files {
+        let path = package_dirs.join(format!("{}.java", name));
+        source_paths.push(path.to_owned());
+
+        File::create(&path)
+            .expect("failed to create source code file")
+            .write_all(content.as_bytes())
+            .expect("failed to write java source");
+    }
 
     {
         let javac_out = Command::new("javac")
             .current_dir(&out_dir)
-            .args(&[
-                "-d",
-                "./compiled",
-                "-cp",
-                format!(
-                    "{}/jars/spigot.jar",
-                    std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set")
-                )
-                .as_str(),
-                main_source_path
-                    .to_str()
-                    .expect("main source file path is not valid UTF-8"),
-            ])
+            .args(
+                [
+                    "-Xlint:deprecation",
+                    "-d",
+                    "./compiled",
+                    "-cp",
+                    format!(
+                        "{}/jars/*",
+                        std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set")
+                    )
+                    .as_str(),
+                ]
+                .iter()
+                .cloned()
+                .chain(source_paths.iter().map(|path| {
+                    path.strip_prefix(&out_dir)
+                        .expect("failed to strip file")
+                        .to_str()
+                        .expect("file path not valid UTF-8")
+                }))
+                .collect::<Vec<&str>>()
+                .as_slice(),
+            )
             .status()
             .expect("failed to run javac command");
 
@@ -104,7 +119,7 @@ pub fn build() {
         let jar_out = Command::new("jar")
             .current_dir(&out_dir.join("compiled"))
             .args(
-                ["-cvf", "../plugin.jar"]
+                ["-cvfM", "../plugin.jar"]
                     .iter()
                     .cloned()
                     .chain(class_files.iter().map(|s| {
@@ -127,30 +142,16 @@ pub fn build() {
     }
 
     {
-        let zip_out = Command::new("zip")
+        let jar_out = Command::new("jar")
             .current_dir(&out_dir)
-            .args(&["-d", "plugin.jar", "META-INF*"])
+            .args(&["-uvf", "plugin.jar", "plugin.yml"])
             .status()
-            .expect("failed to run zip command");
+            .expect("failed to run jar command");
 
-        if zip_out.code().is_some() && zip_out.code().unwrap() != 0 {
-            panic!("zip exited with {}", zip_out);
+        if jar_out.code().is_some() && jar_out.code().unwrap() != 0 {
+            panic!("jar exited with {}", jar_out);
         } else {
-            println!("zip exited with {}", zip_out);
-        }
-    }
-
-    {
-        let zip_out = Command::new("zip")
-            .current_dir(&out_dir)
-            .args(&["-ur", "plugin.jar", "plugin.yml"])
-            .status()
-            .expect("failed to run zip command");
-
-        if zip_out.code().is_some() && zip_out.code().unwrap() != 0 {
-            panic!("zip exited with {}", zip_out);
-        } else {
-            println!("zip exited with {}", zip_out);
+            println!("jar exited with {}", jar_out);
         }
     }
 
