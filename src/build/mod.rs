@@ -1,11 +1,13 @@
-use crate::javagen::source_files;
 use case::CaseExt;
+use javagen::source_files;
 use joinery::JoinableIterator;
 use std::collections::HashMap;
 use std::fs::{read_dir, DirBuilder, DirEntry, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+mod javagen;
 
 // needs to be manually synced with waterjet_macros::PACKAGE_PREFIX
 pub const PACKAGE_PREFIX: &str = "io.github.waterjet";
