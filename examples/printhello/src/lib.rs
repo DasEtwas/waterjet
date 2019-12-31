@@ -1,6 +1,7 @@
 use jni::objects::GlobalRef;
 use jni::JNIEnv;
 use waterjet::McPlugin;
+
 waterjet::hook!(PrintHello, Model);
 
 struct Model {}

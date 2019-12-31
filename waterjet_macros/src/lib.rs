@@ -5,6 +5,8 @@ use proc_macro::{TokenStream, TokenTree};
 // needs to be manually synced with waterjet::build::PACKAGE_PREFIX
 const PACKAGE_PREFIX: &str = "io.github.waterjet";
 
+/// Generates uniquely named non-mangled ffi functions for the plugin's Native class and spawns a thread
+/// in onEnable to give the Model a JNIEnv instance.
 #[proc_macro]
 pub fn hook(item: TokenStream) -> TokenStream {
     let mut tokens = item
@@ -56,12 +58,13 @@ pub fn hook(item: TokenStream) -> TokenStream {
                let env = jvm.attach_current_thread().unwrap();
                
                let mut model = __InternalModel::new({model_type}::default(), plugin, env);
-               tx.send(()).unwrap();
-               
+
                unsafe {{
                    MODEL = Some(Arc::new(model));
                    MODEL.as_ref().unwrap().on_enable();
                }}
+               
+               tx.send(()).unwrap();
                
                while !unsafe {{ DISABLED.load(Ordering::Relaxed) }} {{
                    thread::park();
@@ -86,6 +89,7 @@ pub fn hook(item: TokenStream) -> TokenStream {
         unsafe {{
             DISABLED.store(true, Ordering::Relaxed);
             THREAD.as_ref().unwrap().thread().unpark();
+            let _ = THREAD.take().unwrap().join();
         }}
     }}
 }}"#,
