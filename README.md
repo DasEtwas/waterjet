@@ -56,7 +56,7 @@ impl McPlugin for Model {
 ```
 - Build the project using `cargo build`
 - Copy the generated `.jar` file from the `target/$PROFILE` folder into your server's `plugins` directory and the `.so`/`.dll` file into `plugins/lib`
-- Start the server and you should see `Hello, World!` appear after the message indicating that `[NameOfYourPluginsMainClass] version x.y.z` was loaded
+- Start the server and you should see `Hello, World!` appear after the message indicating that `[NameOfYourPluginsMainClass] version x.y.z` was enabled
 
 ## Examining the above example
 
