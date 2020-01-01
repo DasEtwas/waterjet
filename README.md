@@ -10,7 +10,7 @@ A safe abstraction for making Minecraft Bukkit Server Plugins in Rust using JNI.
 ```toml
 [package]
 # ...
-build = build.rs
+build = "build.rs"
 
 [lib]
 crate_type = ["cdylib"]
