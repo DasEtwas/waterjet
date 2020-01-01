@@ -1,6 +1,6 @@
 # waterjet ![GitHub](https://img.shields.io/github/license/DasEtwas/waterjet?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/DasEtwas/waterjet?style=flat-square)
 
-A safe abstraction for making Minecraft Bukkit Server Plugins in Rust using JNI.
+A plugin generator and safe abstraction for making Minecraft Bukkit Server Plugins in Rust using JNI.
 (early prototype)
 
 ## Quick start guide
@@ -76,7 +76,8 @@ impl McPlugin for Model {
   `softdepend`||list or string
   `extra`||multi-line string containing YAML
 
-  **Note**: The `extra` key may be used for anything which should be appended to the generated plugin.yml
+  **Note**: The `extra` key may be used for anything which should be appended to the generated plugin.yml (eg. permissions, commands)
+  **Note**: For info on the keys supported by Spigot: https://www.spigotmc.org/wiki/plugin-yml/
 
 - waterjet automatically generates a `NameOfYourPluginsMainClass.jar` file with all the necessary FFI code (currently `onEnable` and `onDisable`) which is linked to by the JVM against functions generated in the `waterjet::hook` proc-macro
 - `NameOfYourPluginsMainClass` must be consistent across the Cargo.toml's value `package.metadata.waterjet.name` and the first argument supplied to the `waterjet::hook` proc-macro
