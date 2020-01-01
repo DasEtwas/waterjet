@@ -85,7 +85,7 @@ impl McPlugin for Model {
 ## Features
 
 - Generation of JAR containing plugin code which calls Rust code
-- Automatic loading of plugin's dylib from the plugin
+- Automatic loading of Rust code from the plugin
 - **Compatibility with `/reload` command**: Rust code is loaded by a custom classloader which is destructed in `onDisable` (see todo)
 - Trait providing basic plugin methods (`onEnable`, `onDisable`) providing a reference to the `JavaPlugin` instance and to the `JNIEnv`
 
