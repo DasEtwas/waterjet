@@ -82,7 +82,15 @@ impl McPlugin for Model {
 - waterjet automatically generates a `NameOfYourPluginsMainClass.jar` file with all the necessary FFI code (currently `onEnable` and `onDisable`) which is linked to by the JVM against functions generated in the `waterjet::hook` proc-macro
 - `NameOfYourPluginsMainClass` must be consistent across the Cargo.toml's value `package.metadata.waterjet.name` and the first argument supplied to the `waterjet::hook` proc-macro
 
+## Features
+
+- Generation of JAR containing plugin code which calls Rust code
+- Automatic loading of plugin's dylib from the plugin
+- **Compatibility with `/reload` command**: Rust code is loaded by a custom classloader which is destructed in `onDisable` (see todo)
+- Trait providing basic plugin methods (`onEnable`, `onDisable`) providing a reference to the `JavaPlugin` instance and to the `JNIEnv`
+
 ## Todo
 
 - Event handling
 - Currently, the API is not on solid ground and must be redesigned for event handling, which would include rethinking the current threaded approach of the onEnable FFI function
+- `onDisable` uses a `System.gc()` call to free the `ClassLoader` which loaded the plugin's Rust code, which may cause performance problems (quick and dirty solution to make `/reload` work)
