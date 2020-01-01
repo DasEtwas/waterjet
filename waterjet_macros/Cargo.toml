@@ -1,6 +1,6 @@
 [package]
 name = "waterjet_macros"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["DasEtwas <18222134+DasEtwas@users.noreply.github.com>"]
 edition = "2018"
 crate-type = "proc-macro"

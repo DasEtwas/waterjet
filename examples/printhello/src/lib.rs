@@ -1,6 +1,7 @@
-use jni::objects::GlobalRef;
-use jni::JNIEnv;
-use waterjet::McPlugin;
+use waterjet::{
+    jni::{objects::GlobalRef, JNIEnv},
+    McPlugin,
+};
 
 waterjet::hook!(PrintHello, Model);
 
@@ -13,7 +14,7 @@ impl Default for Model {
 }
 
 impl McPlugin for Model {
-    fn on_enable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {
+    fn on_enable(&self, _plugin: &GlobalRef, jni: &JNIEnv) {
         println!("Hello, World!");
     }
 

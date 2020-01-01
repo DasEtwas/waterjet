@@ -3,6 +3,8 @@ use jni::objects::GlobalRef;
 use jni::{AttachGuard, JNIEnv};
 pub use waterjet_macros::hook;
 
+pub use jni;
+
 pub mod jni_hook_prelude {
     pub use jni::objects::{JClass, JObject};
     pub use jni::JNIEnv;

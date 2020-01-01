@@ -12,7 +12,6 @@ crate_type = ["cdylib"]
 
 [dependencies]
 waterjet = { path = "../../" }
-jni = "0.14.0"
 
 [build-dependencies]
 waterjet = { path = "../../" }
