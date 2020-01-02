@@ -1,7 +1,8 @@
 # waterjet ![GitHub](https://img.shields.io/github/license/DasEtwas/waterjet?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/DasEtwas/waterjet?style=flat-square)
 
 A plugin generator and safe abstraction for making Minecraft Bukkit Server Plugins in Rust using JNI.
-(early prototype)
+
+**(early prototype)**
 
 ## Quick start guide
 - Create a new Cargo library project (`cargo new --lib`)
