@@ -78,6 +78,7 @@ impl McPlugin for Model {
   `extra`||multi-line string containing YAML
 
   **Note**: The `extra` key may be used for anything which should be appended to the generated plugin.yml (eg. permissions, commands)
+  
   **Note**: For info on the keys supported by Spigot: https://www.spigotmc.org/wiki/plugin-yml/
 
 - waterjet automatically generates a `NameOfYourPluginsMainClass.jar` file with all the necessary FFI code (currently `onEnable` and `onDisable`) which is linked to by the JVM against functions generated in the `waterjet::hook` proc-macro
