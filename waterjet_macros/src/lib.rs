@@ -31,7 +31,7 @@ pub fn hook(item: TokenStream) -> TokenStream {
     use ::std::{{sync::Arc, sync::atomic::AtomicBool, sync::atomic::Ordering, sync::mpsc, thread, time::Duration}};
     
     static mut MODEL: Option<Arc<__InternalModel<{model_type}>>> = None;
-    static mut DISABLED: AtomicBool = AtomicBool::new(false);
+    static DISABLED: AtomicBool = AtomicBool::new(false);
     static mut THREAD: Option<std::thread::JoinHandle<()>> = None;
             
     #[no_mangle]
@@ -47,8 +47,9 @@ pub fn hook(item: TokenStream) -> TokenStream {
         // used to block this function until thread is started and jvm attached to it
         let (tx, rx) = mpsc::channel();
         
+        DISABLED.store(false, Ordering::Relaxed);
+        
         unsafe {{
-            DISABLED.store(false, Ordering::Relaxed);
             MODEL = None;
             THREAD = None;
         }}
@@ -86,8 +87,9 @@ pub fn hook(item: TokenStream) -> TokenStream {
         _: JClass,
         _: JObject,
     ) {{
+        DISABLED.store(true, Ordering::Relaxed);
+        
         unsafe {{
-            DISABLED.store(true, Ordering::Relaxed);
             THREAD.as_ref().unwrap().thread().unpark();
             let _ = THREAD.take().unwrap().join();
         }}

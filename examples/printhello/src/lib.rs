@@ -14,7 +14,7 @@ impl Default for Model {
 }
 
 impl McPlugin for Model {
-    fn on_enable(&self, _plugin: &GlobalRef, jni: &JNIEnv) {
+    fn on_enable(&self, _plugin: &GlobalRef, _jni: &JNIEnv) {
         println!("Hello, World!");
     }
 
